@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14112b">
+<title>FF Arena Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14112b;--panel:#211c44;--line:#3a3270;--text:#efeaff;--dim:#a79fd0;--flame:#ff6a3d;--gold:#ffc94a}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:500 17px/1.4 Rajdhani,system-ui,sans-serif;padding:0 0 84px;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px;max-width:600px;margin:auto}
+h1{font-size:28px;font-weight:700}
+main{display:grid;gap:14px;padding:0 16px;max-width:600px;margin:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.dim{color:var(--dim)}.coins{color:var(--gold);font-weight:700}.t{font-size:21px;font-weight:700}
+button{font:700 16px Rajdhani,sans-serif;background:var(--flame);color:#fff;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;width:100%}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+button.on{background:var(--gold);color:#14112b}
+button:disabled{opacity:.45}
+input,select{font:500 16px Rajdhani,sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.n{width:84px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{background:none;color:var(--dim);border-radius:0;padding:16px 0}
+nav button.on{background:none;color:var(--flame);box-shadow:inset 0 3px var(--flame)}
+#msg{color:var(--flame)}
+</style>
+</head>
+<body>
+<header><h1>Admin</h1><button class="ghost" id="out" style="width:auto" hidden>Logout</button></header>
+<main id="view"></main>
+<nav id="nav" hidden><button data-tab="matches" class="on">Matches</button><button data-tab="users">Users</button><button data-tab="cats">Modes</button></nav>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,increment}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Player app wala hi Firebase config yahan paste karo
+const cfg={apiKey:"AIzaSyD1-5WDFX-kv1RzNVgTVSqK4pkNbjGqCGk",authDomain:"sm-zone-aa784.firebaseapp.com",projectId:"sm-zone-aa784",appId:"1:892451469784:web:45b5cc8ef7d5264252daad"};
+const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let tab="matches",matches=[],users=[],cats=[],site={},subs=[];
+
+function loginView(m=""){
+ $("#nav").hidden=true;$("#out").hidden=true;
+ $("#view").innerHTML=`<form class="card" id="lf"><input name="e" type="email" placeholder="Admin email" required><input name="p" type="password" placeholder="Password" required><p id="msg">${esc(m)}</p><button>Login karo</button></form>`;
+ $("#lf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+  try{await signInWithEmailAndPassword(auth,f.get("e"),f.get("p"))}catch(err){$("#msg").textContent="Nahi hua: "+err.code}};
+}
+
+onAuthStateChanged(auth,async u=>{
+ subs.forEach(f=>f());subs=[];
+ if(!u)return loginView();
+ const a=await getDoc(doc(db,"admins",u.uid));
+ if(!a.exists()){await signOut(auth);return loginView("Ye account admin nahi hai.")}
+ $("#nav").hidden=false;$("#out").hidden=false;
+ subs.push(onSnapshot(doc(db,"categories","home"),s=>{site=s.exists()?s.data():{};if(tab=="cats"&&!document.activeElement.closest("#view"))draw()}));
+ subs.push(onSnapshot(query(collection(db,"categories"),orderBy("order")),s=>{cats=s.docs.map(d=>({id:d.id,...d.data()}));if(tab=="cats"||(tab=="matches"&&!document.activeElement.closest("#view")))draw()}));
+ subs.push(onSnapshot(query(collection(db,"matches"),orderBy("startTime","desc")),s=>{matches=s.docs.map(d=>({id:d.id,...d.data()}));if(tab=="matches"&&!document.activeElement.closest("#view"))draw()}));
+ subs.push(onSnapshot(query(collection(db,"users"),orderBy("coins","desc")),s=>{users=s.docs.map(d=>({id:d.id,...d.data()}));if(tab=="users")draw()}));
+});
+$("#out").onclick=()=>signOut(auth);
+$("#nav").onclick=e=>{const b=e.target.closest("button");if(b){tab=b.dataset.tab;draw()}};
+
+const form=()=>`<form class="card" id="mf"><div class="t">Naya match</div>
+<select name="cat" required><option value="">${cats.length?"Mode chuno":"Pehle Modes tab mein mode banao"}</option>${cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}</select>
+<input name="title" placeholder="Match ka naam" required>
+<div class="g"><select name="mode"><option>Solo</option><option>Duo</option><option>Squad</option></select><input name="map" placeholder="Map (Bermuda)" required></div>
+<input name="start" type="datetime-local" required>
+<div class="g"><input name="slots" type="number" min="2" placeholder="Slots" required><input name="prize" type="number" min="0" placeholder="Points (leaderboard)" required></div>
+<div class="g"><input name="fee" type="number" min="0" placeholder="Entry fee ₹ (0 = free)" required><input name="prizeInr" type="number" min="0" placeholder="Prize ₹ (sirf label)" required></div>
+<input name="payInfo" placeholder="Fee kahan bhejni hai (UPI ID)">
+<button>Match banao</button></form>`;
+
+const mcard=m=>`<div class="card" id="m${m.id}"><div class="row"><div><div class="t">${esc(m.title)}</div><div class="dim">${esc((cats.find(c=>c.id==m.cat)||{}).name||"Other")}: ${esc(m.mode)}, ${esc(m.map)}, ${new Date(m.startTime).toLocaleString()}, Fee ₹${m.fee||0}, Prize ₹${m.prizeInr||0}</div></div><b class="coins">${m.prize} pts</b></div>
+<div class="g">${["upcoming","live","done"].map(s=>`<button class="${m.status==s?"on":"ghost"}" data-st="${m.id}:${s}">${{upcoming:"Upcoming",live:"Live",done:"Done"}[s]}</button>`).join("")}</div>
+<div class="g"><input id="ri${m.id}" placeholder="Room ID"><input id="rp${m.id}" placeholder="Password"></div>
+<button class="ghost" data-room="${m.id}">Room save karo</button>
+<button class="ghost" data-pl="${m.id}">Players aur result</button><div id="pl${m.id}"></div>
+<button class="ghost" data-del="${m.id}">Match delete karo</button></div>`;
+
+function catsView(v){
+ v.innerHTML=`<form class="card" id="hf"><div class="t">Home page</div><input name="notice" placeholder="Notice (upar ki line)" value="${esc(site.notice)}"><input name="support" placeholder="Support chat link (WhatsApp ya Telegram)" value="${esc(site.support)}"><input name="banners" placeholder="Banner images ke naam, comma se alag (b1.png, b2.png)" value="${esc((site.banners||[]).join(", "))}"><button>Home page save karo</button></form><form class="card" id="cf"><div class="t">Naya mode</div><input name="name" placeholder="Mode ka naam (jaise LONE WOLF)" required><input name="img" placeholder="Image ka naam (optional, jaise lw.png)"><button>Mode jodo</button></form>`+cats.map(c=>`<div class="card row"><div class="t">${esc(c.name)}</div><button class="ghost n" data-delcat="${c.id}">Delete</button></div>`).join("");
+ $("#hf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+  try{await setDoc(doc(db,"categories","home"),{notice:f.get("notice").trim(),support:f.get("support").trim(),banners:f.get("banners").split(",").map(x=>x.trim()).filter(Boolean)});e.target.querySelector("button").textContent="Save ho gaya"}catch(err){alert("Nahi hua: "+(err.code||err.message))}};
+ $("#cf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+  try{await addDoc(collection(db,"categories"),{name:f.get("name").trim(),img:f.get("img").trim(),order:Date.now()})}catch(err){alert("Nahi hua: "+(err.code||err.message))}};
+}
+
+function draw(){
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab==tab));
+ const v=$("#view");
+ if(tab=="cats")return catsView(v);
+ if(tab=="matches"){v.innerHTML=form()+matches.map(mcard).join("");
+  $("#mf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+   await addDoc(collection(db,"matches"),{cat:f.get("cat"),title:f.get("title").trim(),mode:f.get("mode"),map:f.get("map").trim(),startTime:new Date(f.get("start")).getTime(),slots:+f.get("slots"),prize:+f.get("prize"),fee:+f.get("fee"),prizeInr:+f.get("prizeInr"),payInfo:f.get("payInfo").trim(),status:"upcoming",awarded:false})}}
+ else v.innerHTML=users.map(u=>`<div class="card row"><div><div class="t">${esc(u.ign)}</div><div class="dim">UID ${esc(u.ffUid)}</div></div><div class="row"><b class="coins">${u.coins}</b><button class="ghost n" data-coin="${u.id}">Coins</button></div></div>`).join("")||`<p class="dim">Abhi koi user nahi.</p>`;
+}
+
+$("#view").onclick=async e=>{
+ const b=e.target.closest("button[data-st],button[data-room],button[data-pl],button[data-del],button[data-coin],button[data-award],button[data-flag],button[data-delcat],button[data-pay]");if(!b)return;
+ const d=b.dataset;
+ try{
+  if(d.st){const[id,s]=d.st.split(":");await updateDoc(doc(db,"matches",id),{status:s})}
+  else if(d.room){await setDoc(doc(db,"matches",d.room,"secret","room"),{id:$("#ri"+d.room).value.trim(),pass:$("#rp"+d.room).value.trim()});b.textContent="Room saved"}
+  else if(d.del){if(confirm("Ye match delete karna hai?"))await deleteDoc(doc(db,"matches",d.del))}
+  else if(d.coin){const n=parseInt(prompt("Kitne coins jodne hain? (kam karne ke liye minus likho)"),10);if(n)await updateDoc(doc(db,"users",d.coin),{coins:increment(n)})}
+  else if(d.pay){const s=await getDoc(doc(db,"users",d.pay,"private","payout")),x=b.nextElementSibling,q=s.exists()?s.data():{},okq=/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(q.qr||"");
+   x.innerHTML=q.upi||okq?(q.upi?`<div>UPI ID: <b>${esc(q.upi)}</b></div>`:"")+(okq?`<img src="${esc(q.qr)}" alt="QR" style="width:100%;max-width:240px;background:#fff;border-radius:10px;margin-top:8px">`:""):`<p class="dim">Is player ne abhi payout details nahi diye.</p>`}
+  else if(d.delcat){if(confirm("Ye mode delete karna hai? Isme ke matches Other mein chale jayenge."))await deleteDoc(doc(db,"categories",d.delcat))}
+  else if(d.flag){const[mid,uid,f]=d.flag.split(":"),on=!b.classList.contains("on");await updateDoc(doc(db,"matches",mid,"players",uid),{[f]:on});b.classList.toggle("on",on);b.classList.toggle("ghost",!on)}
+  else if(d.pl){const s=await getDocs(collection(db,"matches",d.pl,"players")),m=matches.find(x=>x.id==d.pl);
+   $("#pl"+d.pl).innerHTML=s.empty?`<p class="dim">Abhi kisi ne join nahi kiya.</p>`:s.docs.map(p=>`<div class="card" style="padding:10px"><div class="row"><span>${p.data().slot?"#"+p.data().slot+" ":""}${esc(p.data().ign)} <span class="dim">${esc(p.data().ffUid)}</span></span><input class="n" type="number" min="0" placeholder="points" data-u="${p.id}"></div><div class="g"><button class="${p.data().paid?"on":"ghost"}" data-flag="${d.pl}:${p.id}:paid">Fee mili</button><button class="${p.data().prizePaid?"on":"ghost"}" data-flag="${d.pl}:${p.id}:prizePaid">Prize diya</button></div><button class="ghost" data-pay="${p.id}">Payout details dekho</button><div></div></div>`).join("")+`<button data-award="${d.pl}" ${m.awarded?"disabled":""}>${m.awarded?"Coins de diye":"Coins do aur match khatam karo"}</button>`}
+  else if(d.award){const ins=[...$("#pl"+d.award).querySelectorAll("input[data-u]")].filter(i=>+i.value>0);
+   if(!ins.length||!confirm("Coins de diye jayenge. Ye dobara nahi ho sakta. Pakka?"))return;
+   for(const i of ins)await updateDoc(doc(db,"users",i.dataset.u),{coins:increment(+i.value)});
+   await updateDoc(doc(db,"matches",d.award),{status:"done",awarded:true})}
+ }catch(err){alert("Nahi hua: "+err.code)}
+};
+</script>
+</body>
+</html>
