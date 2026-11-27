@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e0a1f">
+<title>SM ARENA Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0a1f;--panel:#1a1433;--panel2:#221b42;--line:#3a2f66;
+  --text:#efeaff;--dim:#9b92c4;--flame:#ff6a3d;--gold:#ffc94a;
+  --teal:#1ec8b8;--pink:#c44dff;--ok:#35d08a;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{overscroll-behavior-y:contain}
+body{background:var(--bg);color:var(--text);font:500 16px/1.4 Rajdhani,system-ui,sans-serif;padding:0 0 88px;min-height:100vh}
+#ptr{position:fixed;top:0;left:0;right:0;height:0;overflow:hidden;display:grid;place-items:center;color:var(--dim);font-weight:700;font-size:13px;z-index:50;transition:height .15s;pointer-events:none}
+#ptr.on{height:48px;background:rgba(26,20,51,.92)}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;max-width:640px;margin:auto}
+h1{font-size:24px;font-weight:700}
+main{display:grid;gap:12px;padding:0 14px 20px;max-width:640px;margin:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.dim{color:var(--dim)}.coins{color:var(--gold);font-weight:700}.t{font-size:20px;font-weight:700}
+button{font:700 15px Rajdhani,sans-serif;background:var(--flame);color:#fff;border:0;border-radius:12px;padding:11px 12px;cursor:pointer;width:100%}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+button.on{background:var(--gold);color:#14112b}
+button:disabled{opacity:.45}
+button.teal{background:var(--teal);color:#062422}
+button.pink{background:var(--pink);color:#fff}
+button.sm{width:auto;padding:8px 14px;font-size:14px}
+input,select,textarea{font:500 15px Rajdhani,sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px;width:100%}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.n{width:84px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav button{background:none;color:var(--dim);border-radius:0;padding:14px 0;font-size:13px}
+nav button.on{background:none;color:var(--flame);box-shadow:inset 0 3px var(--flame)}
+#msg{color:var(--flame)}
+
+/* Match filter tabs */
+.mtabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:var(--panel2);border-radius:14px;padding:4px;border:1px solid var(--line)}
+.mtabs button{background:transparent;color:var(--dim);border-radius:10px;padding:10px}
+.mtabs button.on{background:transparent;color:var(--gold);box-shadow:inset 0 -3px var(--gold)}
+
+/* Match card (target UI style) */
+.mcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:12px;position:relative}
+.mhead{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center}
+.mico{width:48px;height:48px;border-radius:12px;border:1px dashed var(--line);display:grid;place-items:center;font-size:22px;background:var(--bg)}
+.mtitle{font-size:18px;font-weight:700}
+.mid{color:var(--teal);font-weight:700;font-size:14px}
+.mmeta{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:14px}
+.mmeta span{color:var(--dim)}
+.mmeta b{color:var(--text);font-weight:600}
+.mmeta .prize{color:var(--gold)}
+.roomline{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--dim)}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--flame))}
+.slotlbl{font-size:13px;color:var(--dim);margin-top:2px}
+.mact{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.panel{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
+.fab{position:fixed;right:18px;bottom:96px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--flame),var(--pink));color:#fff;font-size:28px;font-weight:700;border:0;box-shadow:0 8px 24px rgba(255,106,61,.4);z-index:9;width:56px;padding:0;display:grid;place-items:center;cursor:pointer}
+.badge{font-size:12px;padding:3px 8px;border-radius:8px;font-weight:700}
+.badge.up{background:rgba(255,201,74,.15);color:var(--gold)}
+.badge.live{background:rgba(255,80,80,.2);color:#ff6b6b}
+.badge.done{background:rgba(53,208,138,.15);color:var(--ok)}
+.sheet{position:fixed;inset:0;background:rgba(5,3,15,.8);display:grid;align-items:end;z-index:30}
+.sheet .card{border-radius:18px 18px 0 0;max-width:640px;width:100%;margin:auto;max-height:90vh;overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+/* Dashboard / StarPanel style */
+.dash{display:grid;gap:12px}
+.wel{background:linear-gradient(135deg,#2a1a5c,#1a1433);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:6px;position:relative}
+.wel .brand{font-size:22px;font-weight:700;color:var(--gold)}
+.wel .hello{font-size:16px;color:var(--text)}
+.wel .meta{font-size:13px;color:var(--dim)}
+.wel .logout{position:absolute;top:14px;right:14px;width:auto;padding:6px 12px;font-size:13px}
+.access{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;font-weight:700;color:var(--dim)}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:12px}
+.sec h3{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qtile{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;display:grid;gap:6px;font-weight:700;font-size:13px}
+.qtile:active{transform:scale(.98)}
+.qtile .qi{font-size:28px}
+.actrow{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:8px}
+.actrow .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.actrow .ttl{font-weight:700}
+.actrow .idtag{background:rgba(30,200,184,.15);color:var(--teal);padding:2px 8px;border-radius:8px;font-size:12px;font-weight:700}
+.actrow .bar{height:5px;background:var(--line);border-radius:6px;overflow:hidden}
+.actrow .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--pink))}
+.badge-n{background:var(--flame);color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px}
+.modegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.modetile{cursor:pointer;text-align:center;display:grid;gap:8px}
+.modetile .mimg{width:100%;aspect-ratio:1;border-radius:16px;overflow:hidden;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;position:relative}
+.modetile .mimg img{width:100%;height:100%;object-fit:cover}
+.modetile .mimg .ph{font-size:36px}
+.modetile .mname{font-weight:700;font-size:14px}
+.modetile .mopen{font-size:12px;color:var(--ok);font-weight:700}
+</style>
+</head>
+<body>
+<div id="ptr">↓ Refresh</div>
+<header>
+  <h1>SM ARENA Admin</h1>
+  <button class="ghost sm" id="out" hidden>Logout</button>
+</header>
+<main id="view"></main>
+<nav id="nav" hidden>
+  <button data-tab="matches" class="on">Matches</button>
+  <button data-tab="users">Users</button>
+  <button data-tab="deps">Deposit</button>
+  <button data-tab="cats">Modes</button>
+  <button data-tab="rep">Hisaab</button>
+</nav>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,createUserWithEmailAndPassword}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,increment,writeBatch,runTransaction}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const cfg={apiKey:"AIzaSyD1-5WDFX-kv1RzNVgTVSqK4pkNbjGqCGk",authDomain:"sm-zone-aa784.firebaseapp.com",projectId:"sm-zone-aa784",appId:"1:892451469784:web:45b5cc8ef7d5264252daad"};
+const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+// Secondary app: naya admin banate waqt current login disturb nahi hoga
+let secondaryApp=null,secondaryAuth=null;
+function getSecondaryAuth(){
+ if(!secondaryAuth){
+  secondaryApp=initializeApp(cfg,"adminSecondary");
+  secondaryAuth=getAuth(secondaryApp);
+ }
+ return secondaryAuth;
+}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let tab="matches",mFilter="upcoming",matches=[],users=[],cats=[],site={},deps=[],wds=[],subs=[],slotCount={},showForm=false,openId=null,pickMode=false,matchCat="",plOpen=false,userQ="",bulkMode=false;
+
+// Pull to refresh (swipe down)
+(function(){
+ let y0=0,pulling=false,busy=false;
+ const ptr=()=>document.getElementById("ptr");
+ const atTop=()=>(window.scrollY||document.documentElement.scrollTop||0)<=8;
+ document.addEventListener("touchstart",e=>{
+  if(!atTop()||busy)return;
+  if(!auth.currentUser)return;
+  y0=e.touches[0].clientY;pulling=true;
+ },{passive:true});
+ document.addEventListener("touchmove",e=>{
+  if(!pulling||busy)return;
+  const dy=e.touches[0].clientY-y0;
+  const el=ptr();
+  if(dy>24&&atTop()&&el){el.classList.add("on");el.textContent=dy>80?"Release to refresh":"↓ Pull to refresh"}
+  else if(el)el.classList.remove("on");
+ },{passive:true});
+ document.addEventListener("touchend",async e=>{
+  if(!pulling)return;pulling=false;
+  const dy=(e.changedTouches[0]?e.changedTouches[0].clientY:0)-y0;
+  const el=ptr();
+  if(dy>80&&atTop()&&auth.currentUser&&!busy){
+   busy=true;
+   if(el){el.classList.add("on");el.textContent="Refreshing..."}
+   try{
+    // Fresh slot counts for visible matches
+    const list=matches.filter(m=>m.status!=="done").slice(0,40);
+    for(let i=0;i<list.length;i+=8){
+     await Promise.all(list.slice(i,i+8).map(async m=>{
+      try{slotCount[m.id]=(await getDocs(collection(db,"matches",m.id,"slots"))).size}catch(err){}
+     }));
+    }
+    if(typeof draw==="function")draw();
+   }catch(err){console.error(err)}
+   busy=false;
+   setTimeout(()=>{const p=ptr();if(p){p.classList.remove("on");p.textContent="↓ Refresh"}},350);
+  }else if(el)el.classList.remove("on");
+ },{passive:true});
+})();
+
+
+function loginView(m=""){
+ $("#nav").hidden=true;$("#out").hidden=true;
+ $("#view").innerHTML=`<form class="card" id="lf"><div class="t">Admin Login</div><input name="e" type="email" placeholder="Admin email" required><input name="p" type="password" placeholder="Password" required><p id="msg">${esc(m)}</p><button>Login karo</button></form>`;
+ $("#lf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+  try{await signInWithEmailAndPassword(auth,f.get("e"),f.get("p"))}catch(err){$("#msg").textContent="Nahi hua: "+err.code}};
+}
+
+onAuthStateChanged(auth,async u=>{
+ subs.forEach(f=>f());subs=[];
+ if(!u)return loginView();
+ const a=await getDoc(doc(db,"admins",u.uid));
+ if(!a.exists()){await signOut(auth);return loginView("Ye account admin nahi hai.")}
+ $("#nav").hidden=false;$("#out").hidden=false;
+ let _drawT=null,_slotGen=0;
+ const scheduleDraw=()=>{
+  if(document.activeElement&&document.activeElement.closest("#view input,#view textarea,#view select"))return;
+  clearTimeout(_drawT);_drawT=setTimeout(()=>{_drawT=null;draw()},100);
+ };
+ window.__scheduleDraw=scheduleDraw;
+ subs.push(onSnapshot(doc(db,"categories","home"),s=>{site=s.exists()?s.data():{};if(tab=="cats")scheduleDraw()}));
+ subs.push(onSnapshot(query(collection(db,"categories"),orderBy("order")),s=>{cats=s.docs.map(d=>({id:d.id,...d.data()}));if(tab=="cats"||tab=="matches")scheduleDraw()}));
+ subs.push(onSnapshot(query(collection(db,"matches"),orderBy("startTime","desc")),s=>{
+  matches=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.startTime||0)-(b.startTime||0));
+  if(tab=="matches")scheduleDraw();
+  // slots: batch, ek hi redraw
+  const gen=++_slotGen;
+  (async()=>{
+   const list=matches.filter(m=>m.status!=="done").slice(0,25);
+   for(let i=0;i<list.length;i+=6){
+    if(gen!==_slotGen)return;
+    await Promise.all(list.slice(i,i+6).map(async m=>{
+     try{slotCount[m.id]=(await getDocs(collection(db,"matches",m.id,"slots"))).size}catch(e){}
+    }));
+   }
+   if(gen===_slotGen&&tab=="matches")scheduleDraw();
+  })();
+ }));
+ subs.push(onSnapshot(query(collection(db,"users"),orderBy("coins","desc")),s=>{users=s.docs.map(d=>({id:d.id,...d.data()}));if(tab=="users")scheduleDraw()}));
+ subs.push(onSnapshot(query(collection(db,"deposits"),orderBy("at","desc")),s=>{deps=s.docs.map(d=>({id:d.id,...d.data()}));if(tab=="deps")scheduleDraw()}));
+ subs.push(onSnapshot(query(collection(db,"withdrawals"),orderBy("at","desc")),s=>{wds=s.docs.map(d=>({id:d.id,...d.data()}));if(tab=="deps")scheduleDraw()}));
+});
+$("#out").onclick=()=>signOut(auth);
+$("#nav").onclick=e=>{const b=e.target.closest("button");if(b){tab=b.dataset.tab;showForm=false;bulkMode=false;pickMode=false;matchCat="";openId=null;plOpen=false;draw()}};
+
+const shortId=id=>(id||"").slice(-4).toUpperCase();
+const fmtDate=t=>new Date(t).toLocaleString([],{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});
+const toLocalInput=t=>{
+  if(!t)return"";
+  const d=new Date(t);
+  if(isNaN(d.getTime()))return"";
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+function modesPicker(){
+ if(!cats.length)return`<div class="card"><div class="t">Modes</div><p class="dim">Pehle Modes tab se mode banao.</p><button class="ghost" id="modeback">‹ Wapas</button></div>`;
+ return`<div class="card"><div class="row"><div class="t">All Modes</div><button class="ghost sm" id="modeback">‹ Wapas</button></div>
+ <div class="dim">Mode chuno, phir usme match add karo</div>
+ <div class="modegrid">${cats.map(c=>{
+  const open=matches.filter(m=>m.cat==c.id&&(m.status==="upcoming"||!m.status)&& (slotCount[m.id]??0)<m.slots).length;
+  return`<div class="modetile" data-pickmode="${esc(c.id)}">
+   <div class="mimg">${c.img?`<img src="${esc(c.img)}" alt="" onerror="this.parentNode.innerHTML='<div class=ph>🎮</div>'">`:`<div class="ph">🎮</div>`}</div>
+   <div class="mname">${esc(c.name)}</div>
+   ${open?`<div class="mopen">● ${open} open</div>`:""}
+  </div>`;
+ }).join("")}</div></div>`;
+}
+
+const isPerKillMode=name=>{
+ const n=String(name||"").toLowerCase().replace(/\s+/g," ");
+ return (n.includes("full map")||n.includes("fullmap")||n.includes("survival")||n.includes("br "))&&(n.includes("br")||n.includes("battle")||n.includes("royale")||n.includes("survival")||n.includes("full"));
+};
+// BR Full Map / BR Survival only
+const allowPerKill=name=>{
+ const n=String(name||"").toLowerCase();
+ return /full\s*map|survival/.test(n);
+};
+// 1v1 → 2 slots, 2v2 → 4 slots (fixed). Full Map / Survival → editable
+const fixedSlots=name=>{
+ const n=String(name||"").toLowerCase().replace(/\s+/g," ");
+ if(/full\s*map|survival|br\s*fm|brfm|brs\b/.test(n))return null;
+ if(/1\s*v\s*1|1v1/.test(n))return 2;
+ if(/2\s*v\s*2|2v2/.test(n))return 4;
+ return null;
+};
+// Mode → fixed banner (GitHub root images)
+const modeBanner=name=>{
+ const n=String(name||"").toLowerCase().replace(/\s+/g," ").trim();
+ if(/cs\s*1\s*v\s*1|cs\s*1v1/.test(n))return"cs1v1.png";
+ if(/cs\s*2\s*v\s*2|cs\s*2v2/.test(n))return"cs2v2.png";
+ if(/lone\s*wolf\s*1\s*v\s*1|lw\s*1v1|lone\s*wolf\s*1v1/.test(n))return"lw1v1.png";
+ if(/lone\s*wolf\s*2\s*v\s*2|lw\s*2v2|lone\s*wolf\s*2v2/.test(n))return"lw2v2.png";
+ if(/full\s*map|br\s*fm|brfm/.test(n))return"brfm.png";
+ if(/survival|brs\b/.test(n))return"brs.png";
+ return"";
+};
+function matchForm(){
+ const catName=(cats.find(c=>c.id==matchCat)||{}).name||"";
+ const showPK=allowPerKill(catName);
+ const autoBan=modeBanner(catName);
+ const fixS=fixedSlots(catName);
+ const slotsField=fixS!=null
+  ?`<input type="hidden" name="slots" value="${fixS}"><div class="dim">Slots fixed: <b class="coins">${fixS}</b> (${fixS===2?"1v1":"2v2"})</div>`
+  :`<input name="slots" type="number" min="2" placeholder="Slots (Full Map / Survival)" required>`;
+ const catField=matchCat
+  ?`<input type="hidden" name="cat" value="${esc(matchCat)}">`
+  :`<select name="cat" required><option value="">${cats.length?"Mode chuno":"Pehle Modes tab mein mode banao"}</option>${cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}</select>`;
+ return `<div class="card" id="mfwrap"><div class="t">Naya match${matchCat?" · "+esc(catName):""}</div>
+<form id="mf" class="panel" style="gap:8px">
+${catField}
+<input name="title" value="${esc(catName)}" placeholder="Match ka naam" required>
+<div class="g"><select name="mode"><option>Solo</option><option>Duo</option><option>Squad</option></select><input name="map" placeholder="Map (Bermuda)" required></div>
+<input name="start" type="datetime-local" required>
+${slotsField}
+<input type="hidden" name="prize" value="0">
+<div class="g"><input name="fee" type="number" min="0" placeholder="Entry fee ₹" required><input name="prizeInr" type="number" min="0" placeholder="Prize ₹" required></div>
+${showPK?`<input name="perKill" type="number" min="0" placeholder="Per kill ₹">`:`<input type="hidden" name="perKill" value="0">`}
+<input type="hidden" name="banner" value="${esc(autoBan)}">
+${autoBan?`<div class="dim">Banner auto: <b class="coins">${esc(autoBan)}</b></div>`:`<div class="dim">Is mode ka fixed banner nahi mila.</div>`}
+<input name="ranks" placeholder="Rank prize: 1:17, 2:5">
+<div class="g"><button type="button" class="ghost" id="mfcancel">Band</button><button name="one">Match banao</button></div>
+<button type="submit" name="more" class="ghost" value="1">Banao + aur add karo</button>
+</form></div>`;
+}
+
+// Ek time pe multiple modes pe matches
+function bulkMatchForm(){
+ if(!cats.length)return`<div class="card"><div class="t">Bulk matches</div><p class="dim">Pehle Modes tab se mode banao.</p><button class="ghost" id="bulkcancel">Band</button></div>`;
+ return `<div class="card" id="bulkwrap">
+  <div class="t">⚡ Bulk matches — 15 min gap</div>
+  <div class="dim">Selected modes × kitne matches. Pehla start time se har match default <b class="coins">15 min</b> baad (gap change kar sakte ho).</div>
+  <form id="bulkmf" class="panel" style="gap:8px">
+   <div class="dim" style="font-weight:700">Modes select karo</div>
+   <div class="g" style="grid-template-columns:1fr 1fr">
+    ${cats.map(c=>`<label style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px">
+     <input type="checkbox" name="modes" value="${esc(c.id)}" checked style="width:auto">
+     <span>${esc(c.name)}</span>
+    </label>`).join("")}
+   </div>
+   <div class="g"><button type="button" class="ghost sm" id="bulkall">Saare</button><button type="button" class="ghost sm" id="bulknone">Koi nahi</button></div>
+   <input name="map" placeholder="Map (Bermuda)" required>
+   <input name="start" type="datetime-local" required>
+   <div class="g">
+    <div><div class="dim" style="margin-bottom:4px">Har mode pe kitne matches</div><input name="count" type="number" min="1" max="48" value="4" required></div>
+    <div><div class="dim" style="margin-bottom:4px">Gap (minutes)</div><input name="gap" type="number" min="1" max="180" value="15" required></div>
+   </div>
+   <div class="dim" id="bulkpreview">Example: 4 matches → 0, 15, 30, 45 min</div>
+   <div class="g"><input name="fee" type="number" min="0" placeholder="Entry fee ₹" required><input name="prizeInr" type="number" min="0" placeholder="Prize ₹" required></div>
+   <input name="perKill" type="number" min="0" placeholder="Per kill ₹ (sirf BR modes pe lagega)">
+   <input name="ranks" placeholder="Rank prize: 1:17, 2:5">
+   <select name="mode"><option>Solo</option><option>Duo</option><option>Squad</option></select>
+   <p id="bulkmsg" class="dim"></p>
+   <div class="g"><button type="button" class="ghost" id="bulkcancel">Band</button><button>Saare matches banao</button></div>
+  </form>
+ </div>`;
+}
+
+function mcard(m){
+ const filled=slotCount[m.id]??0;
+ const pct=Math.min(100,Math.round(filled/Math.max(1,m.slots)*100));
+ const st=m.status||"upcoming";
+ const badge=st==="live"?`<span class="badge live">Live</span>`:st==="done"?`<span class="badge done">Done</span>`:`<span class="badge up">Upcoming</span>`;
+ const cat=(cats.find(c=>c.id==m.cat)||{}).name||"Other";
+ return `<div class="mcard" id="m${m.id}">
+  <div class="mhead">
+   <div class="mico">🎮</div>
+   <div>
+    <div class="mtitle">${esc(m.title)} <span class="mid">(#${shortId(m.id)})</span></div>
+    <div class="dim" style="font-size:13px">${fmtDate(m.startTime)} · ${esc(cat)}</div>
+   </div>
+   ${badge}
+  </div>
+  <div class="mmeta">
+   <div><span>Total Prize:</span> <b class="prize">₹${m.prizeInr||0}</b></div>
+   <div><span>Entry Fees:</span> <b>₹${m.fee||0}</b></div>
+   ${allowPerKill((cats.find(c=>c.id==m.cat)||{}).name)?`<div><span>Per Kill:</span> <b>₹${m.perKill||0}</b></div>`:""}
+   <div><span>Type:</span> <b>${esc(m.mode||"—")}</b></div>
+   <div><span>Map:</span> <b>${esc(m.map||"—")}</b></div>
+
+  </div>
+  <div class="roomline">
+   <div>Room id: <b>${m._roomId?esc(m._roomId):"Not set"}</b></div>
+   <div>Password: <b>${m._roomPass?"••••":"Not set"}</b></div>
+  </div>
+  <div>
+   <div class="slotlbl">Slots: ${filled}/${m.slots} (${pct}%)</div>
+   <div class="bar"><i style="width:${pct}%"></i></div>
+  </div>
+  <div class="mact">
+   <button class="teal" data-pl="${m.id}">Participants</button>
+   <button class="pink" data-upd="${m.id}">Update</button>
+  </div>
+ </div>`;
+}
+
+async function editScreen(v,id){
+ const m=matches.find(x=>x.id==id);
+ if(!m){openId=null;return matchesView(v)}
+ await loadRooms([m]);
+ const st=m.status||"upcoming";
+ const filled=slotCount[m.id]??0;
+ const modeName=(cats.find(c=>c.id==m.cat)||{}).name||"";
+ v.innerHTML=`<button class="ghost" id="editback">‹ Wapas</button>
+ <div class="card">
+  <div class="t">${esc(m.title)} <span class="mid">(#${shortId(m.id)})</span></div>
+  <div class="dim">${fmtDate(m.startTime)} · Slots ${filled}/${m.slots}${modeName?" · "+esc(modeName):""}</div>
+ </div>
+ <div class="card">
+  <div class="t" style="font-size:17px">Status</div>
+  <div class="g3">${["upcoming","live","done"].map(s=>`<button class="${st==s?"on":"ghost"}" data-st="${m.id}:${s}">${{upcoming:"Upcoming",live:"Live",done:"Done"}[s]}</button>`).join("")}</div>
+ </div>
+ <div class="card">
+  <div class="t" style="font-size:17px">Match time</div>
+  <div class="dim">Time nikal gaya ho to yahan naya time set karo — status Upcoming ho jayega.</div>
+  <input id="rt${m.id}" type="datetime-local" value="${toLocalInput(m.startTime)}">
+  <button data-time="${m.id}">Time save karo</button>
+ </div>
+ <div class="card">
+  <div class="t" style="font-size:17px">Room ID / Password</div>
+  ${st==="done"?`<div class="dim">Match Done hai — room band.</div>`:`
+  <div class="g"><input id="ri${m.id}" placeholder="Room ID" value="${esc(m._roomId||"")}"><input id="rp${m.id}" placeholder="Password" value="${esc(m._roomPass||"")}"></div>
+  <button class="ghost" data-room="${m.id}">Room save karo</button>`}
+ </div>
+ <div class="card">
+  <div class="t" style="font-size:17px">Match details edit</div>
+  <form id="ef" class="panel" style="gap:8px;background:transparent;border:0;padding:0">
+   <input type="hidden" name="cat" value="${esc(m.cat||"")}">
+   ${modeName?`<div class="dim">Mode: <b>${esc(modeName)}</b></div>`:""}
+   <input name="title" value="${esc(m.title||modeName||"")}" placeholder="Match ka naam" required>
+   <div class="g"><select name="mode"><option ${m.mode=="Solo"?"selected":""}>Solo</option><option ${m.mode=="Duo"?"selected":""}>Duo</option><option ${m.mode=="Squad"?"selected":""}>Squad</option></select>
+   <input name="map" value="${esc(m.map||"")}" placeholder="Map"></div>
+   ${(()=>{const fs=fixedSlots(modeName);return fs!=null?`<input type="hidden" name="slots" value="${fs}"><div class="dim">Slots fixed: <b class="coins">${fs}</b> (1v1=2 / 2v2=4)</div>`:`<input name="slots" type="number" min="2" value="${m.slots||2}" placeholder="Slots">`;})()}
+   <input type="hidden" name="prize" value="${m.prize||0}">
+   <div class="g"><input name="fee" type="number" min="0" value="${m.fee||0}" placeholder="Fee ₹">
+   <input name="prizeInr" type="number" min="0" value="${m.prizeInr||0}" placeholder="Prize ₹"></div>
+   ${allowPerKill(modeName)?`<input name="perKill" type="number" min="0" value="${m.perKill||0}" placeholder="Per kill">`:`<input type="hidden" name="perKill" value="0">`}
+   <input type="hidden" name="banner" value="${esc(modeBanner(modeName)||m.banner||"")}">
+   <div class="dim">Banner: <b class="coins">${esc(modeBanner(modeName)||m.banner||"—")}</b></div>
+   <input name="ranks" value="${esc(m.ranks||"")}" placeholder="Ranks 1:17, 2:5">
+   <button>Details save karo</button>
+  </form>
+ </div>
+ <div class="card">
+  <div class="t" style="font-size:17px">Participants</div>
+  <button class="teal" data-pl="${m.id}">${plOpen?"Participants band":"Participants kholo"}</button>
+  <div id="pl${m.id}">${plOpen?`<p class="dim">Load ho raha hai...</p>`:""}</div>
+ </div>
+ <div class="card">
+  <button class="ghost" data-copy="${m.id}">Notification text copy</button>
+  <button class="ghost" data-del="${m.id}" style="border-color:#ff6b6b;color:#ff6b6b">Match delete</button>
+ </div>`;
+ const back=$("#editback");if(back)back.onclick=()=>{openId=null;plOpen=false;draw()};
+ const ef=$("#ef");
+ if(ef)ef.onsubmit=async e=>{
+  e.preventDefault();
+  const f=new FormData(ef);
+  try{
+   await updateDoc(doc(db,"matches",m.id),{
+    cat:f.get("cat"),title:f.get("title").trim(),mode:f.get("mode"),map:f.get("map").trim(),
+    slots:+f.get("slots"),prize:+f.get("prize"),fee:+f.get("fee"),prizeInr:+f.get("prizeInr"),
+    perKill:+f.get("perKill")||0,banner:f.get("banner").trim(),ranks:f.get("ranks").trim()
+   });
+   alert("Details save ho gaye.");
+  }catch(err){alert("Nahi hua: "+(err.code||err.message))}
+ };
+ if(plOpen)await fillPlayers(m.id);
+}
+
+async function fillPlayers(mid){
+ const el=$("#pl"+mid);
+ if(!el)return;
+ const s=await getDocs(collection(db,"matches",mid,"players")),m=matches.find(x=>x.id==mid);
+ const via=p=>{const v=p.data().paidVia;return v==="wallet"?'<span class="coins">Wallet se pay ✓</span>':v==="upi"?'<span class="dim">UPI</span>':'<span class="dim">—</span>'};
+ const fee=Number(m?.fee)||0;
+ const hasPrize=s.docs.some(p=>p.data().prizePaid);
+ el.innerHTML=s.empty?`<p class="dim">Koi player nahi.</p>`:`<div class="dim">Player remove = slot khali + fee refund. Prize diya = sirf EK player · Winning mein paise.</div>`+s.docs.map(p=>{
+  const pd=p.data();
+  const prizeBtn=pd.prizePaid
+   ?`<button class="on" data-flag="${mid}:${p.id}:prizePaid">Prize diya ₹${pd.prizeAmt||0}</button>`
+   :(hasPrize?`<button class="ghost" disabled>Prize locked</button>`:`<button class="ghost" data-flag="${mid}:${p.id}:prizePaid">Prize diya</button>`);
+  return`<div class="card" style="padding:10px"><div class="row"><span>${pd.slot?"#"+pd.slot+" ":""}<b>${esc(pd.ign)}</b> <span class="dim">${esc(pd.ffUid)}</span></span><input class="n" type="number" min="0" placeholder="points" data-u="${p.id}"></div><div class="dim">Payment: ${via(p)} ${pd.paid?'<b class="coins">· Fee mili</b>':''}</div>${pd.paidVia==="wallet"?`<div class="dim">Wallet se fee kat gayi</div>`:`<div class="dim">Payer: <b>${esc(pd.payerName||"—")}</b> · UTR: <b>${esc(pd.utr||"—")}</b></div>`}<div class="g"><button class="${pd.paid?"on":"ghost"}" data-flag="${mid}:${p.id}:paid">Fee mili</button>${prizeBtn}</div><button class="ghost" data-kick="${mid}:${p.id}" style="border-color:#ff6b6b;color:#ff6b6b">Remove${fee&&(pd.paid||pd.paidVia==="wallet")?" + ₹"+fee+" refund":""}</button></div>`;
+ }).join("")+`<button data-award="${mid}" ${m&&m.awarded?"disabled":""}>${m&&m.awarded?"Result de diya":"Result dedo"}</button>`;
+}
+
+let repRange="30";
+const repCalc=(m,ps)=>{const paid=ps.filter(p=>p.paid).length;return{paid,got:paid*(m.fee||0),gave:ps.reduce((s,p)=>s+(p.prizePaid?(+p.prizeAmt||0):0),0)}};
+const repRow=r=>`<div class="card"><div class="t">${esc(r.m.title)}</div><div class="dim">${new Date(r.m.startTime).toLocaleDateString()}, ${r.paid} player ne fee di</div><div class="row"><span>Fee mili</span><b class="coins">₹${r.got}</b></div><div class="row"><span>Prize diya</span><b class="coins">₹${r.gave}</b></div><div class="row"><span>Bacha</span><b class="coins">₹${r.got-r.gave}</b></div></div>`;
+async function repView(v){
+ const clearedAt=Number(site.hisaabClearedAt)||0;
+ const head=`<div class="card"><div class="t">Kamai ka hisaab</div>
+  <select id="rr"><option value="1">Aaj</option><option value="7">Pichhle 7 din</option><option value="30">Pichhle 30 din</option><option value="0">Sab</option></select>
+  ${clearedAt?`<div class="dim">Last clear: ${new Date(clearedAt).toLocaleString()}</div>`:""}
+  <button class="ghost" id="hisclear" style="border-color:#ff6b6b;color:#ff6b6b">Hisaab clear karo</button>
+ </div>`;
+ const mount=body=>{
+  v.innerHTML=head+body;
+  const s=$("#rr");if(s){s.value=repRange;s.onchange=()=>{repRange=s.value;repView(v)}}
+  const hc=$("#hisclear");
+  if(hc)hc.onclick=async()=>{
+   if(!confirm("Hisaab CLEAR? Ab tak ka total 0 se shuru hoga. Matches delete nahi honge — sirf hisaab reset."))return;
+   try{
+    await setDoc(doc(db,"categories","home"),{...(site||{}),hisaabClearedAt:Date.now()},{merge:true});
+    site.hisaabClearedAt=Date.now();
+    alert("Hisaab clear ho gaya.");
+    repView(v);
+   }catch(err){alert("Nahi hua: "+(err.code||err.message))}
+  };
+ };
+ mount(`<p class="dim">Hisaab ban raha hai...</p>`);
+ const days=+repRange,from=days?Date.now()-days*864e5:0;
+ const list=matches.filter(m=>m.startTime>=from&&m.startTime>=clearedAt&&(m.fee>0||m.prizeInr>0)).sort((a,b)=>b.startTime-a.startTime);
+ let rows;
+ try{rows=await Promise.all(list.map(async m=>({m,...repCalc(m,(await getDocs(collection(db,"matches",m.id,"players"))).docs.map(d=>d.data()))})))}
+ catch(e){if(tab=="rep")mount(`<p class="dim">Nahi hua: ${esc(e.code||e.message)}</p>`);return}
+ if(tab!="rep")return;
+ const T=rows.reduce((a,r)=>({got:a.got+r.got,gave:a.gave+r.gave}),{got:0,gave:0});
+ mount(`<div class="card"><div class="t">Total</div><div class="row"><span>Fee mili</span><b class="coins">₹${T.got}</b></div><div class="row"><span>Prize diya</span><b class="coins">₹${T.gave}</b></div><div class="row"><span>Bacha</span><b class="coins">₹${T.got-T.gave}</b></div></div>`+(rows.length?rows.map(repRow).join(""):`<p class="dim">Is samay mein koi fee ya prize wala match nahi hai.</p>`));
+}
+
+function catsView(v){
+ v.innerHTML=`<form class="card" id="hf"><div class="t">Home page</div><input name="notice" placeholder="Notice" value="${esc(site.notice)}"><input name="support" placeholder="Support chat link" value="${esc(site.support)}"><input name="banners" placeholder="Banner images, comma se" value="${esc((site.banners||[]).join(", "))}"><input name="vapidKey" placeholder="VAPID key" value="${esc(site.vapidKey)}"><textarea name="rules" rows="4" placeholder="Default rules (jab mode pe rules na hon)">${esc(site.rules)}</textarea><button>Home save</button></form>
+<form class="card" id="cf"><div class="t">Naya mode</div><input name="name" placeholder="Mode naam" required><input name="img" placeholder="Image naam (optional)"><textarea name="rules" rows="4" placeholder="Is mode ke rules (har line alag rule)"></textarea><button>Mode jodo</button></form>
+<div class="card"><div class="t">Modes + Rules</div><div class="dim">Har mode ke alag rules. Player match detail pe yahi dikhega.</div></div>`+
+ cats.map(c=>`<div class="card">
+  <div class="row"><div class="t">${esc(c.name)}</div><button class="ghost sm" data-delcat="${c.id}">Delete</button></div>
+  <form class="panel moderules" data-cid="${c.id}" style="gap:8px">
+   <textarea name="rules" rows="4" placeholder="Rules (har line alag)">${esc(c.rules||"")}</textarea>
+   <button type="submit" class="sm">Rules save</button>
+  </form>
+ </div>`).join("")+
+ `<form class="card" id="staffform"><div class="t">Staff account banao</div>
+  <div class="dim">Sirf username + password. Staff panel pe email nahi — username se login.</div>
+  <input name="name" placeholder="Staff display naam" required>
+  <input name="user" placeholder="Username (login ID)" required pattern="[a-zA-Z0-9._-]{3,20}" title="3–20 letters/numbers">
+  <input name="p" type="password" placeholder="Password (min 6)" required minlength="6">
+  <select name="modeId" required>
+   <option value="">Mode assign karo</option>
+   ${cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}
+  </select>
+  <div class="g">
+   <div><div class="dim" style="margin-bottom:4px">Duty start</div><input name="workStart" type="time" value="10:00" required></div>
+   <div><div class="dim" style="margin-bottom:4px">Duty end</div><input name="workEnd" type="time" value="22:00" required></div>
+  </div>
+  <div><div class="dim" style="margin-bottom:4px">Per match pay (₹)</div><input name="perMatch" type="number" min="0" step="0.01" value="1.25" placeholder="Per match ₹" required></div>
+  <p id="staffmsg" class="dim"></p>
+  <button type="submit">Staff banao</button>
+ </form>
+ <div class="card"><div class="t">Staff list</div><div id="stafflist" class="dim">Load...</div></div>`;
+ $("#hf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+  try{await setDoc(doc(db,"categories","home"),{notice:f.get("notice").trim(),support:f.get("support").trim(),rules:f.get("rules").trim(),vapidKey:f.get("vapidKey").trim(),banners:f.get("banners").split(",").map(x=>x.trim()).filter(Boolean),hisaabClearedAt:site.hisaabClearedAt||0});e.target.querySelector("button").textContent="Save ho gaya"}catch(err){alert("Nahi hua: "+(err.code||err.message))}};
+ $("#cf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+  try{await addDoc(collection(db,"categories"),{name:f.get("name").trim(),img:f.get("img").trim(),rules:(f.get("rules")||"").trim(),order:Date.now()})}catch(err){alert("Nahi hua: "+(err.code||err.message))}};
+ document.querySelectorAll("form.moderules").forEach(frm=>{
+  frm.onsubmit=async e=>{
+   e.preventDefault();
+   const f=new FormData(frm);
+   try{
+    await updateDoc(doc(db,"categories",frm.dataset.cid),{rules:(f.get("rules")||"").trim()});
+    alert("Mode rules save ho gaye.");
+   }catch(err){alert("Nahi hua: "+(err.code||err.message))}
+  };
+ });
+ const renderStaffList=async()=>{
+  try{
+   const snap=await getDocs(collection(db,"staff"));
+   const box=$("#stafflist");
+   if(!box)return;
+   if(snap.empty){box.innerHTML="Abhi koi staff nahi.";return}
+   box.innerHTML=snap.docs.map(d=>{
+    const x=d.data();
+    const modeN=x.modeName||(cats.find(c=>c.id===x.modeId)||{}).name||x.modeId||"—";
+    const tm=(x.workStart&&x.workEnd)?`${x.workStart} – ${x.workEnd}`:"Time set nahi";
+    const pm=Number(x.perMatch);
+    const pmShow=Number.isFinite(pm)?pm:1.25;
+    return`<div class="card" style="padding:12px;margin-top:8px">
+     <div class="row"><div><b>${esc(x.name||x.username||d.id)}</b><div class="dim">@${esc(x.username||x.email||"—")}</div></div>
+     <button type="button" class="ghost sm" data-delstaff="${d.id}">Hatao</button></div>
+     <div class="dim" style="margin-top:6px">Mode: <b class="coins">${esc(modeN)}</b> · Duty: <b>${esc(tm)}</b> · Per match: <b class="coins">₹${pmShow}</b></div>
+     <form class="panel staffedit" data-sid="${d.id}" style="margin-top:8px;gap:8px">
+      <select name="modeId" required>
+       <option value="">Mode</option>
+       ${cats.map(c=>`<option value="${esc(c.id)}" ${c.id===x.modeId?"selected":""}>${esc(c.name)}</option>`).join("")}
+      </select>
+      <div class="g">
+       <input name="workStart" type="time" value="${esc(x.workStart||"10:00")}" required>
+       <input name="workEnd" type="time" value="${esc(x.workEnd||"22:00")}" required>
+      </div>
+      <div><div class="dim" style="margin-bottom:4px">Per match pay (₹)</div><input name="perMatch" type="number" min="0" step="0.01" value="${pmShow}" required></div>
+      <button type="submit" class="sm">Mode / time / rate save</button>
+     </form>
+    </div>`;
+   }).join("");
+   box.querySelectorAll("form.staffedit").forEach(frm=>{
+    frm.onsubmit=async e=>{
+     e.preventDefault();
+     const f=new FormData(frm);
+     const modeId=f.get("modeId");
+     const workStart=f.get("workStart");
+     const workEnd=f.get("workEnd");
+     let perMatch=Number(f.get("perMatch"));
+     if(!Number.isFinite(perMatch)||perMatch<0)perMatch=0;
+     const modeName=(cats.find(c=>c.id===modeId)||{}).name||"";
+     if(!modeId){alert("Mode chuno");return}
+     try{
+      await updateDoc(doc(db,"staff",frm.dataset.sid),{modeId,modeName,workStart,workEnd,perMatch});
+      alert("Staff update ho gaya (mode / time / per match).");
+      renderStaffList();
+     }catch(err){alert("Nahi hua: "+(err.code||err.message))}
+    };
+   });
+  }catch(e){const box=$("#stafflist");if(box)box.textContent="Staff list load nahi hui (rules check karo)."}
+ };
+ renderStaffList();
+ $("#staffform").onsubmit=async e=>{
+  e.preventDefault();
+  const f=new FormData(e.target);
+  const name=f.get("name").trim();
+  const username=(f.get("user")||"").trim().toLowerCase().replace(/\s+/g,"");
+  const pass=f.get("p");
+  const modeId=f.get("modeId");
+  const workStart=f.get("workStart");
+  const workEnd=f.get("workEnd");
+  let perMatch=Number(f.get("perMatch"));
+  if(!Number.isFinite(perMatch)||perMatch<0)perMatch=0;
+  const modeName=(cats.find(c=>c.id===modeId)||{}).name||"";
+  const msg=$("#staffmsg");
+  const btn=e.target.querySelector("button");
+  if(!name||!username||pass.length<6){msg.textContent="Naam, username aur password (6+) zaroori.";return}
+  if(!/^[a-z0-9._-]{3,20}$/.test(username)){msg.textContent="Username 3–20 chars: a-z, 0-9, . _ -";return}
+  if(!modeId){msg.textContent="Mode assign karo.";return}
+  if(!workStart||!workEnd){msg.textContent="Duty start/end time set karo.";return}
+  // Firebase Auth email format (hidden) — staff sirf username se login karega
+  const email=username+"@staff.sm-arena.app";
+  btn.disabled=true;btn.textContent="Bana rahe hain...";msg.textContent="";
+  try{
+   const sAuth=getSecondaryAuth();
+   const cred=await createUserWithEmailAndPassword(sAuth,email,pass);
+   await setDoc(doc(db,"staff",cred.user.uid),{
+    name,username,email,modeId,modeName,workStart,workEnd,perMatch,
+    createdAt:Date.now(),createdBy:auth.currentUser&&auth.currentUser.uid||""
+   });
+   try{await signOut(sAuth)}catch(_){}
+   msg.style.color="var(--ok)";
+   msg.textContent="Staff ban gaya → User: "+username+" · Mode: "+modeName+" · Duty: "+workStart+"–"+workEnd+" · ₹"+perMatch+"/match";
+   e.target.reset();
+   renderStaffList();
+  }catch(err){
+   msg.style.color="var(--flame)";
+   const c=err.code||"";
+   if(c==="auth/email-already-in-use")msg.textContent="Ye username pehle se registered hai.";
+   else if(c==="auth/invalid-email")msg.textContent="Username format sahi nahi.";
+   else if(c==="auth/weak-password")msg.textContent="Password kam se kam 6 character.";
+   else msg.textContent="Nahi hua: "+(c||err.message);
+  }
+  btn.disabled=false;btn.textContent="Staff banao";
+ };
+}
+
+function depsView(v){
+ const pending=deps.filter(d=>d.status==="pending");
+ const done=deps.filter(d=>d.status!=="pending").slice(0,20);
+ const wPend=wds.filter(d=>d.status==="pending");
+ const wDone=wds.filter(d=>d.status!=="pending").slice(0,20);
+ const row=d=>{
+  const st=d.status==="approved"?"✓ Approved":d.status==="rejected"?"✗ Rejected":"Pending";
+  const col=d.status==="approved"?"coins":d.status==="rejected"?"dim":"";
+  return `<div class="card"><div class="row"><div><div class="t">${esc(d.ign||"—")}</div><div class="dim">UID ${esc(d.ffUid||"")} · ${new Date(d.at).toLocaleString()}</div></div><b class="coins">₹${d.amount||0}</b></div>
+  <div class="dim">Naam: <b>${esc(d.payerName||"—")}</b> · UTR: <b>${esc(d.utr||"—")}</b></div>
+  <div class="row"><span class="${col}">${st}</span>${d.status==="pending"?`<div class="g" style="width:auto"><button data-depok="${d.id}">Confirm</button><button class="ghost" data-deprej="${d.id}">Reject</button></div>`:""}</div></div>`;
+ };
+ const wrow=d=>{
+  const st=d.status==="approved"?"✓ Paid":d.status==="rejected"?"✗ Rejected":"Pending";
+  const col=d.status==="approved"?"coins":d.status==="rejected"?"dim":"";
+  return `<div class="card"><div class="row"><div><div class="t">${esc(d.ign||"—")}</div><div class="dim">UID ${esc(d.ffUid||"")} · ${new Date(d.at).toLocaleString()}</div></div><b class="coins">₹${d.amount||0}</b></div>
+  <div class="dim">Naam: <b>${esc(d.accountName||"—")}</b> · UPI: <b>${esc(d.upi||"—")}</b></div>
+  <div class="row"><span class="${col}">${st}</span>${d.status==="pending"?`<div class="g" style="width:auto"><button data-wdok="${d.id}">Paid kar diya</button><button class="ghost" data-wdrej="${d.id}">Reject</button></div>`:""}</div></div>`;
+ };
+ v.innerHTML=`<div class="card"><div class="t">Pending withdraw (${wPend.length})</div><div class="dim">Pehle UPI pe paise bhejo, phir Paid kar diya dabao. Reject pe Winning wapas.</div></div>`+
+  (wPend.length?wPend.map(wrow).join(""):`<p class="dim">Koi pending withdraw nahi.</p>`)+
+  `<div class="card"><div class="t">Pending deposits (${pending.length})</div><div class="dim">Confirm karo tab player ke Deposit me paise jayenge.</div></div>`+
+  (pending.length?pending.map(row).join(""):`<p class="dim">Koi pending deposit nahi.</p>`)+
+  (wDone.length?`<div class="card"><div class="t">Pichhle withdraw</div></div>`+wDone.map(wrow).join(""):"")+
+  (done.length?`<div class="card"><div class="t">Pichhle deposits</div></div>`+done.map(row).join(""):"");
+}
+
+async function loadRooms(list){
+ await Promise.all(list.map(async m=>{
+  try{const s=await getDoc(doc(db,"matches",m.id,"secret","room"));if(s.exists()){m._roomId=s.data().id||"";m._roomPass=s.data().pass||""}else{m._roomId="";m._roomPass=""}}catch(e){m._roomId="";m._roomPass=""}
+ }));
+}
+
+// Khali + time nikal chuka matches → last useful match ke baad 15 min gap se shift
+async function rescheduleEmptyClosedMatches(catId, gapMin=15){
+ // Mode-level stop
+ if(catId){
+  const cat=cats.find(c=>c.id===catId);
+  if(cat&&cat.shiftLock)return {moved:0,locked:true};
+ }
+ const now=Date.now();
+ const gapMs=Math.max(1,gapMin)*60*1000;
+ const inMode=matches.filter(m=>!catId||m.cat===catId);
+ if(!inMode.length)return {moved:0};
+ // Ensure slot counts for candidates
+ const need=inMode.filter(m=>m.status!=="done"&&slotCount[m.id]==null).slice(0,40);
+ for(let i=0;i<need.length;i+=8){
+  await Promise.all(need.slice(i,i+8).map(async m=>{
+   try{slotCount[m.id]=(await getDocs(collection(db,"matches",m.id,"slots"))).size}catch(e){slotCount[m.id]=0}
+  }));
+ }
+ const filledOf=m=>slotCount[m.id]??0;
+ // Anchor = matches jisme players hain YA future upcoming
+ const anchors=inMode.filter(m=>{
+  if(m.status==="done")return false;
+  if(filledOf(m)>0)return true;
+  return (m.startTime||0)>now && (m.status==="upcoming"||!m.status);
+ });
+ let last=anchors.length?Math.max(...anchors.map(m=>m.startTime||0)):now;
+ if(last<now)last=now;
+ // Empty + closed (time nikal gaya, koi player nahi) — shiftLock skip
+ const empty=inMode.filter(m=>{
+  if(m.shiftLock)return false;
+  if(m.status==="done")return false;
+  if(filledOf(m)>0)return false;
+  return (m.startTime||0)<=now;
+ }).sort((a,b)=>(a.startTime||0)-(b.startTime||0));
+ if(!empty.length)return {moved:0};
+ let moved=0;
+ for(const m of empty){
+  last+=gapMs;
+  try{
+   await updateDoc(doc(db,"matches",m.id),{startTime:last,status:"upcoming"});
+   m.startTime=last;m.status="upcoming";
+   moved++;
+  }catch(e){console.error("reschedule",m.id,e)}
+ }
+ return {moved,last};
+}
+
+function wireMatchForm(){
+ if(bulkMode){
+  const cancel=$("#bulkcancel");if(cancel)cancel.onclick=()=>{bulkMode=false;showForm=false;draw()};
+  const all=$("#bulkall");if(all)all.onclick=()=>document.querySelectorAll('#bulkmf input[name="modes"]').forEach(c=>c.checked=true);
+  const none=$("#bulknone");if(none)none.onclick=()=>document.querySelectorAll('#bulkmf input[name="modes"]').forEach(c=>c.checked=false);
+  const form=$("#bulkmf");if(!form)return;
+  const updatePreview=()=>{
+   const c=Math.max(1,Math.min(48,+$("#bulkmf input[name=count]")?.value||4));
+   const g=Math.max(1,Math.min(180,+$("#bulkmf input[name=gap]")?.value||15));
+   const prev=$("#bulkpreview");
+   if(prev)prev.textContent=`Har mode pe ${c} matches · gap ${g} min → 0, ${[...Array(Math.min(c,5)).keys()].slice(1).map(i=>i*g).join(", ")}${c>5?" …":""} min`;
+  };
+  form.querySelectorAll('input[name=count],input[name=gap]').forEach(el=>el.addEventListener("input",updatePreview));
+  updatePreview();
+  form.onsubmit=async e=>{
+   e.preventDefault();
+   const f=new FormData(form);
+   const modeIds=[...form.querySelectorAll('input[name="modes"]:checked')].map(x=>x.value);
+   const msg=$("#bulkmsg");
+   if(!modeIds.length){if(msg)msg.textContent="Kam se kam 1 mode select karo.";return}
+   const start=new Date(f.get("start")).getTime();
+   if(!Number.isFinite(start)){if(msg)msg.textContent="Sahi date/time chuno.";return}
+   let count=Math.floor(+f.get("count")||1);
+   let gapMin=Math.floor(+f.get("gap")||15);
+   if(count<1)count=1;if(count>48)count=48;
+   if(gapMin<1)gapMin=15;if(gapMin>180)gapMin=180;
+   const gapMs=gapMin*60*1000;
+   const map=(f.get("map")||"").trim();
+   const fee=+f.get("fee")||0;
+   const prizeInr=+f.get("prizeInr")||0;
+   const perKillIn=+f.get("perKill")||0;
+   const ranks=(f.get("ranks")||"").trim();
+   const modeType=f.get("mode")||"Solo";
+   const total=modeIds.length*count;
+   const btn=form.querySelector('button:last-child');
+   if(btn){btn.disabled=true;btn.textContent=`Bana rahe... 0/${total}`}
+   if(msg)msg.textContent="";
+   let ok=0,fail=0;
+   for(const cid of modeIds){
+    const cat=cats.find(c=>c.id===cid)||{};
+    const catName=cat.name||"Match";
+    const fixS=fixedSlots(catName);
+    const slots=fixS!=null?fixS:48;
+    const banner=modeBanner(catName);
+    const pk=allowPerKill(catName)?perKillIn:0;
+    for(let i=0;i<count;i++){
+     const startTime=start+i*gapMs;
+     const title=count>1?`${catName} #${i+1}`:catName;
+     try{
+      await addDoc(collection(db,"matches"),{
+       cat:cid,title,mode:modeType,map,startTime,slots,
+       prize:0,fee,prizeInr,payInfo:"8080721723@fam",perKill:pk,
+       banner,ranks,status:"upcoming",awarded:false
+      });
+      ok++;
+     }catch(err){fail++;console.error(err)}
+     if(btn)btn.textContent=`Bana rahe... ${ok+fail}/${total}`;
+    }
+   }
+   if(btn){btn.disabled=false;btn.textContent="Saare matches banao"}
+   if(msg){msg.style.color=fail?"var(--flame)":"var(--ok)";msg.textContent=`${ok} matches ban gaye (${modeIds.length} modes × ${count}, gap ${gapMin} min)`+(fail?`, ${fail} fail`:"")+"."}
+   if(ok&&!fail){setTimeout(()=>{bulkMode=false;showForm=false;mFilter="upcoming";pickMode=false;matchCat="";draw()},1200)}
+  };
+  return;
+ }
+ if(!showForm)return;
+ $("#mfcancel").onclick=()=>{showForm=false;draw()};
+ $("#mf").onsubmit=async e=>{
+  e.preventDefault();
+  const f=new FormData(e.target);
+  const keepOpen=!!e.submitter&&e.submitter.name==="more";
+  const btn=e.submitter||e.target.querySelector("button");
+  if(btn){btn.disabled=true;btn.textContent="..."}
+  try{
+   await addDoc(collection(db,"matches"),{cat:f.get("cat")||matchCat,title:f.get("title").trim(),mode:f.get("mode"),map:f.get("map").trim(),startTime:new Date(f.get("start")).getTime(),slots:+f.get("slots"),prize:+f.get("prize"),fee:+f.get("fee"),prizeInr:+f.get("prizeInr"),payInfo:"8080721723@fam",perKill:+f.get("perKill")||0,banner:f.get("banner").trim(),ranks:f.get("ranks").trim(),status:"upcoming",awarded:false});
+   mFilter="upcoming";
+   if(keepOpen){
+    if(btn){btn.disabled=false;btn.textContent=btn.name==="more"?"Banao + aur add karo":"Match banao"}
+    alert("Match ban gaya. Form open hai — aur add kar sakte ho.");
+   }else{
+    showForm=false;draw();
+   }
+  }catch(err){
+   alert("Nahi hua: "+(err.code||err.message));
+   if(btn){btn.disabled=false;btn.textContent=btn.name==="more"?"Banao + aur add karo":"Match banao"}
+  }
+ };
+}
+
+async function matchesView(v){
+ // Full update screen
+ if(openId){return editScreen(v,openId)}
+ // Bulk create (all modes, one time)
+ if(bulkMode){
+  v.innerHTML=bulkMatchForm();
+  wireMatchForm();
+  return;
+ }
+ // Mode picker screen
+ if(pickMode){
+  v.innerHTML=modesPicker()+`
+  <div class="card">
+   <div class="t">⚡ Bulk add</div>
+   <div class="dim">Ek time pe saare (ya selected) modes mein matches banao.</div>
+   <button id="openbulk">Multiple modes pe matches banao</button>
+  </div>`;
+  const back=$("#modeback");if(back)back.onclick=()=>{pickMode=false;showForm=false;matchCat="";bulkMode=false;draw()};
+  const ob=$("#openbulk");if(ob)ob.onclick=()=>{bulkMode=true;showForm=false;matchCat="";pickMode=false;draw()};
+  return;
+ }
+
+ // Mode-specific interface (matches of one mode)
+ if(matchCat){
+  const catObj=cats.find(c=>c.id==matchCat)||{name:matchCat};
+  const catName=catObj.name||matchCat;
+  const modeShiftLocked=!!catObj.shiftLock;
+  // Auto-shift only when mode not stopped
+  if(!modeShiftLocked&&!window.__reschedLock){
+   window.__reschedLock=true;
+   rescheduleEmptyClosedMatches(matchCat,15).then(r=>{
+    window.__reschedLock=false;
+    if(r&&r.moved>0){
+     const n=document.createElement("div");
+     n.className="card";
+     n.style.cssText="border-color:var(--teal)";
+     n.innerHTML=`<div class="dim"><b class="coins">${r.moved}</b> khali/closed matches last match ke baad (15 min gap) auto shift ho gaye.</div>`;
+     const main=$("#view");if(main)main.prepend(n);
+     setTimeout(()=>n.remove(),4000);
+    }
+   }).catch(()=>{window.__reschedLock=false});
+  }
+  const filt=mFilter==="live"?m=>m.status==="live":mFilter==="done"?m=>m.status==="done":m=>m.status!=="live"&&m.status!=="done";
+  const list=matches.filter(m=>m.cat==matchCat).filter(filt).sort((a,b)=>(a.startTime||0)-(b.startTime||0));
+  v.innerHTML=`<button class="ghost" id="modehome">‹ All Modes</button>
+  <div class="t">${esc(catName)}</div>
+  <div class="mtabs">
+   <button data-mf="live" class="${mFilter=="live"?"on":""}">Ongoing</button>
+   <button data-mf="upcoming" class="${mFilter=="upcoming"?"on":""}">Upcoming</button>
+   <button data-mf="done" class="${mFilter=="done"?"on":""}">Results</button>
+  </div>
+  <div class="card" style="padding:12px">
+   <div class="dim">${modeShiftLocked
+    ?"🛑 Is mode pe auto-shift <b style=\"color:#ff6b6b\">BAND</b> hai. Unlock se wapas chalu."
+    :"Auto: 0 players + time nikal gaya → last match ke baad 15 min gap se shift."}</div>
+   <div class="g" style="margin-top:8px">
+    ${modeShiftLocked
+     ?`<button type="button" id="modeshiftbtn" style="background:var(--ok)">▶ Unlock</button>`
+     :`<button type="button" class="ghost" id="modeshiftbtn" style="border-color:#ff6b6b;color:#ff6b6b">🛑 Stop</button>`}
+    <button type="button" class="ghost" id="reschedbtn" ${modeShiftLocked?"disabled":""}>Abhi shift karo</button>
+   </div>
+  </div>
+  ${showForm?matchForm():""}
+  <div id="mlist"><p class="dim">Load ho raha hai...</p></div>
+  <button class="fab" id="fabadd" title="Naya match">+</button>`;
+  await loadRooms(list);
+  if(tab!=="matches")return;
+  const box=$("#mlist");
+  if(box)box.innerHTML=list.length?list.map(mcard).join(""):`<p class="dim">Is mode mein is tab ka koi match nahi.</p>`;
+  wireMatchForm();
+  const fab=$("#fabadd");if(fab)fab.onclick=()=>{bulkMode=false;showForm=!showForm;draw()};
+  const mh=$("#modehome");if(mh)mh.onclick=()=>{matchCat="";showForm=false;bulkMode=false;pickMode=true;draw()};
+  const msb=$("#modeshiftbtn");
+  if(msb)msb.onclick=async()=>{
+   const lock=!modeShiftLocked;
+   msb.disabled=true;msb.textContent="...";
+   try{
+    await updateDoc(doc(db,"categories",matchCat),{shiftLock:lock});
+    const c=cats.find(x=>x.id===matchCat);if(c)c.shiftLock=lock;
+    draw();
+   }catch(err){
+    alert("Nahi hua: "+(err.code||err.message));
+    msb.disabled=false;msb.textContent=modeShiftLocked?"▶ Unlock":"🛑 Stop";
+   }
+  };
+  const rb=$("#reschedbtn");
+  if(rb)rb.onclick=async()=>{
+   if(modeShiftLocked){alert("Pehle Unlock karo.");return}
+   rb.disabled=true;rb.textContent="Shift ho raha...";
+   const r=await rescheduleEmptyClosedMatches(matchCat,15);
+   alert((r.moved||0)+" matches shift ho gaye.");
+   rb.disabled=false;rb.textContent="Abhi shift karo";
+   draw();
+  };
+  return;
+ }
+
+ // Front dashboard only (no match list)
+ // Sirf woh matches jisme kam se kam 1 player join kar chuka ho
+ const active=matches.filter(m=>(m.status==="live"||m.status==="upcoming"||!m.status)&&(slotCount[m.id]??0)>0).sort((a,b)=>(a.startTime||0)-(b.startTime||0)).slice(0,8);
+ const u=auth.currentUser;
+ const adminName=(u&&u.email)?u.email.split("@")[0]:"Admin";
+ const nowStr=new Date().toLocaleString([],{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+
+ const activeHtml=active.length?active.map((m,i)=>{
+  const filled=slotCount[m.id]??0;
+  const pct=Math.min(100,Math.round(filled/Math.max(1,m.slots)*100));
+  return `<div class="actrow">
+   <div class="top">
+    <div>
+     <div class="ttl"><span class="badge-n">#${i+1}</span> ${esc(m.title)} <span class="idtag">ID:${shortId(m.id)}</span></div>
+     <div class="dim" style="font-size:12px;margin-top:4px">🕐 ${fmtDate(m.startTime)}</div>
+    </div>
+    <button class="pink sm" data-upd="${m.id}">Show</button>
+   </div>
+   <div class="bar"><i style="width:${pct}%"></i></div>
+   <div class="dim" style="font-size:12px;text-align:right">${filled}/${m.slots}</div>
+  </div>`;
+ }).join(""):`<p class="dim">Abhi koi active tournament nahi.</p>`;
+
+ v.innerHTML=`<div class="dash">
+  <div class="wel">
+   <div class="brand">⭐ SM ARENA</div>
+   <div class="hello">👋 ${esc(adminName)}</div>
+   <div class="meta">ID: admin · ${esc(nowStr)}</div>
+  </div>
+  <div class="access">⏰ 24/7 Access</div>
+  <div class="sec">
+   <h3>⚡ Quick Actions</h3>
+   <div class="qgrid">
+    <div class="qtile" id="qa-match"><div class="qi">🎯</div>Match</div>
+    <div class="qtile" id="qa-bulk"><div class="qi">⚡</div>Bulk</div>
+    <div class="qtile" data-tabjump="users"><div class="qi">👥</div>Users</div>
+    <div class="qtile" data-tabjump="deps"><div class="qi">💰</div>Deposit</div>
+   </div>
+  </div>
+  <div class="sec">
+   <h3>🎯 Active Tournaments <span class="badge-n">${active.length}</span></h3>
+   ${activeHtml}
+  </div>
+ </div>`;
+ const qa=$("#qa-match");if(qa)qa.onclick=()=>{pickMode=true;showForm=false;bulkMode=false;matchCat="";draw()};
+ const qb=$("#qa-bulk");if(qb)qb.onclick=()=>{bulkMode=true;showForm=false;pickMode=false;matchCat="";openId=null;draw()};
+}
+
+function draw(){
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab==tab));
+ const v=$("#view");
+ if(tab=="cats")return catsView(v);
+ if(tab=="rep")return repView(v);
+ if(tab=="deps")return depsView(v);
+ if(tab=="matches")return matchesView(v);
+ // users + SMID search
+ const q=(userQ||"").trim().toLowerCase();
+ const list=q?users.filter(u=>{
+  const sm=String(u.smid||"").toLowerCase();
+  const ign=String(u.ign||"").toLowerCase();
+  const ff=String(u.ffUid||"").toLowerCase();
+  return sm.includes(q)||ign.includes(q)||ff.includes(q)||String(u.id).toLowerCase().includes(q);
+ }):users;
+ v.innerHTML=`<div class="card"><div class="t">Players</div>
+  <input id="usearch" placeholder="SMID / naam / FF UID search..." value="${esc(userQ)}">
+  <div class="dim">${list.length} dikh rahe hain${q?" (filter)":""}</div>
+ </div>`+list.map(u=>{
+  const w=u.wallet||{};
+  const ww=typeof w.w==="number"?w.w:0, dd=typeof w.d==="number"?w.d:0, bb=typeof w.b==="number"?w.b:0;
+  const shown=(typeof w.w==="number"||typeof w.d==="number"||typeof w.b==="number")?(ww+dd+bb):(Number(u.coins)||0);
+  return `<div class="card"><div class="row"><div><div class="t">${esc(u.ign)}</div>
+  <div class="dim">SMID <b class="coins">${esc(u.smid||"—")}</b> · FF ${esc(u.ffUid||"—")}</div></div>
+  <div class="row"><b class="coins">₹${Math.round(Number.isFinite(shown)&&Math.abs(shown)<=1e7?shown:0)}</b><button class="ghost sm" data-coin="${u.id}">Set</button></div></div>
+  <div class="dim">Wallet → Winning ₹${ww} · Deposit ₹${dd} · Bonus ₹${bb}</div>
+  <div class="g"><button class="ghost" data-wadd="${u.id}">± Deposit</button><button class="ghost" data-wwin="${u.id}">± Winning</button></div></div>`;
+ }).join("")||`<p class="dim">${q?"Is search pe koi nahi mila.":"Abhi koi user nahi."}</p>`;
+ const us=$("#usearch");
+ if(us){
+  let t=null;
+  us.oninput=()=>{
+   userQ=us.value;
+   clearTimeout(t);
+   t=setTimeout(()=>{
+    draw();
+    const el=$("#usearch");if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}
+   },180);
+  };
+ }
+}
+
+$("#view").onclick=async e=>{
+ const tj=e.target.closest("[data-tabjump]");
+ if(tj){tab=tj.dataset.tabjump;showForm=false;pickMode=false;openId=null;draw();return}
+ const pm=e.target.closest("[data-pickmode]");
+ if(pm){matchCat=pm.dataset.pickmode;pickMode=false;showForm=false;mFilter="upcoming";openId=null;draw();return}
+ const mf=e.target.closest("[data-mf]");
+ if(mf){mFilter=mf.dataset.mf;openId=null;draw();return}
+ const up=e.target.closest("button[data-upd]");
+ if(up){openId=up.dataset.upd;showForm=false;pickMode=false;draw();return}
+
+ const b=e.target.closest("button[data-st],button[data-room],button[data-time],button[data-pl],button[data-del],button[data-coin],button[data-award],button[data-flag],button[data-delcat],button[data-deladmin],button[data-delstaff],button[data-copy],button[data-wadd],button[data-wwin],button[data-depok],button[data-deprej],button[data-wdok],button[data-wdrej],button[data-kick],button[data-stoplock]");
+ if(!b)return;
+ const d=b.dataset;
+ try{
+  if(d.st){const[id,s]=d.st.split(":");await updateDoc(doc(db,"matches",id),s=="done"?{status:s,doneAt:Date.now()}:{status:s});if(s=="done")await deleteDoc(doc(db,"matches",id,"secret","room")).catch(()=>{})}
+  else if(d.time){
+   const el=$("#rt"+d.time);
+   const val=el&&el.value;
+   if(!val){alert("Pehle naya date/time chuno.");return}
+   const ts=new Date(val).getTime();
+   if(!Number.isFinite(ts)){alert("Sahi date/time chuno.");return}
+   await updateDoc(doc(db,"matches",d.time),{startTime:ts,status:"upcoming"});
+   b.textContent="Time save ho gaya";
+   setTimeout(()=>{b.textContent="Time save karo"},1500);
+  }
+  else if(d.room){const m=matches.find(x=>x.id==d.room),n=(await getDocs(collection(db,"matches",d.room,"slots"))).size;
+   if(n<m.slots){alert("Abhi "+n+"/"+m.slots+" slot bhare hain. Saare slot bharne ke baad hi room ID de sakte ho.");return}
+   const rid=$("#ri"+d.room).value.trim(),rpass=$("#rp"+d.room).value.trim();
+   if(!rid||!rpass){alert("Room ID aur Password dono bharo.");return}
+   await setDoc(doc(db,"matches",d.room,"secret","room"),{id:rid,pass:rpass});
+   await updateDoc(doc(db,"matches",d.room),{status:"live"});
+   slotCount[d.room]=n;
+   b.textContent="Room saved · Live";
+   alert("Room save + status Live ho gaya.");
+  }
+  else if(d.stoplock){
+   const [mid,flag]=String(d.stoplock).split(":");
+   const lock=flag==="1";
+   try{
+    await updateDoc(doc(db,"matches",mid),{shiftLock:lock});
+    const mm=matches.find(x=>x.id===mid);if(mm)mm.shiftLock=lock;
+    alert(lock?"🛑 Auto-shift band. Ye match time shift nahi hoga.":"▶ Unlock. Ab auto-shift ho sakta hai.");
+    draw();
+   }catch(err){alert("Nahi hua: "+(err.code||err.message))}
+  }
+  else if(d.del){if(confirm("Ye match delete karna hai?")){await deleteDoc(doc(db,"matches",d.del));openId=null}}
+  else if(d.coin){
+   const u=users.find(x=>x.id==d.coin)||{},w=u.wallet||{};
+   const ask=(label,cur)=>{const r=prompt(label,String(Math.round(Number(cur)||0)));if(r===null)return null;const n=Math.round(Number(r));if(!Number.isFinite(n)||n<0||n>10000000){alert("0 se 1 crore ke beech number likho.");return null}return n};
+   const ww=ask("Winning balance kitna RAKHNA hai?",w.w||0);if(ww===null)return;
+   const dd=ask("Deposit balance kitna rakhna hai?",w.d||0);if(dd===null)return;
+   const bb=ask("Bonus balance kitna rakhna hai?",w.b||0);if(bb===null)return;
+   const tx=Array.isArray(w.tx)?w.tx.slice():[];
+   tx.unshift({t:"Admin ne balance set kiya",a:(ww+dd+bb)-((+w.w||0)+(+w.d||0)+(+w.b||0)),s:"W ₹"+ww+" · D ₹"+dd+" · B ₹"+bb,at:Date.now()});
+   await updateDoc(doc(db,"users",d.coin),{wallet:{w:ww,d:dd,b:bb,tx:tx.slice(0,40)},coins:ww+dd+bb});
+  }
+  else if(d.wadd||d.wwin){
+   const uid=d.wadd||d.wwin, isWin=!!d.wwin;
+   const n=parseInt(prompt((isWin?"Winning":"Deposit")+" change: add 100, kam -100"),10);
+   if(!n||!Number.isFinite(n)){alert("Sahi number likho. Kam ke liye minus.");return}
+   if(Math.abs(n)>10000000){alert("Bahut bada number.");return}
+   const uref=doc(db,"users",uid);
+   await runTransaction(db,async t=>{
+    const snap=await t.get(uref);
+    const cur=snap.exists()?(snap.data().wallet||{}):{};
+    const W={w:typeof cur.w==="number"?cur.w:0, d:typeof cur.d==="number"?cur.d:0, b:typeof cur.b==="number"?cur.b:0, tx:Array.isArray(cur.tx)?cur.tx:[]};
+    if(isWin)W.w=Math.max(0,W.w+n); else W.d=Math.max(0,W.d+n);
+    W.tx.unshift({t:(isWin?"Admin Winning":"Admin Deposit")+(n>=0?" credit":" debit"),a:n,s:"Success",at:Date.now()});
+    W.tx=W.tx.slice(0,40);
+    t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+   });
+  }
+  else if(d.wdok||d.wdrej){
+   const id=d.wdok||d.wdrej, ok=!!d.wdok;
+   const wref=doc(db,"withdrawals",id);
+   const ws=await getDoc(wref);
+   if(!ws.exists()||ws.data().status!=="pending"){alert("Ye request already process ho chuki hai.");return}
+   const data=ws.data();
+   const amt=Number(data.amount)||0;
+   const markWdTx=(tx,status)=>{
+    const list=Array.isArray(tx)?tx.slice():[];
+    let found=false;
+    for(const row of list){
+     if(found)break;
+     if(/pending/i.test(row.s||"")&&/withdraw/i.test(row.t||"")&&Math.abs(Number(row.a)||0)===amt){
+      row.s=status;
+      row.t=status==="Success"?("Withdraw paid ₹"+amt):("Withdraw rejected ₹"+amt);
+      found=true;
+     }
+    }
+    if(!found&&status==="Success")list.unshift({t:"Withdraw paid ₹"+amt,a:-amt,s:"Success",at:Date.now()});
+    return list.slice(0,40);
+   };
+   if(ok){
+    if(!confirm("₹"+amt+" UPI "+(data.upi||"")+" pe bhej diya? Confirm = Paid."))return;
+    await runTransaction(db,async t=>{
+     const ws2=await t.get(wref);
+     if(!ws2.exists()||ws2.data().status!=="pending")return;
+     const uref=doc(db,"users",data.uid);
+     const us=await t.get(uref);
+     if(us.exists()){
+      const cur=us.data().wallet||{};
+      const W={w:typeof cur.w==="number"?cur.w:0,d:typeof cur.d==="number"?cur.d:0,b:typeof cur.b==="number"?cur.b:0,tx:markWdTx(cur.tx,"Success")};
+      t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+     }
+     t.update(wref,{status:"approved",approvedAt:Date.now()});
+    });
+    alert("Withdraw Paid · player history Success.");
+   }else{
+    if(!confirm("Reject? ₹"+amt+" player ke Winning mein wapas jayega."))return;
+    await runTransaction(db,async t=>{
+     const ws2=await t.get(wref);
+     if(!ws2.exists()||ws2.data().status!=="pending")return;
+     const uref=doc(db,"users",data.uid);
+     const us=await t.get(uref);
+     if(us.exists()){
+      const cur=us.data().wallet||{};
+      const W={w:typeof cur.w==="number"?cur.w:0,d:typeof cur.d==="number"?cur.d:0,b:typeof cur.b==="number"?cur.b:0,tx:Array.isArray(cur.tx)?cur.tx.slice():[]};
+      W.w+=amt;
+      W.tx=markWdTx(W.tx,"Rejected");
+      W.tx.unshift({t:"Withdraw reject refund ₹"+amt,a:amt,s:"Success",at:Date.now()});
+      W.tx=W.tx.slice(0,40);
+      t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+     }
+     t.update(wref,{status:"rejected",rejectedAt:Date.now()});
+    });
+    alert("Reject + Winning refund · history update.");
+   }
+  }
+  else if(d.depok||d.deprej){
+   const id=d.depok||d.deprej, ok=!!d.depok;
+   const dref=doc(db,"deposits",id);
+   const ds=await getDoc(dref);
+   if(!ds.exists()||ds.data().status!=="pending"){alert("Ye request already process ho chuki hai.");return}
+   const data=ds.data();
+   if(ok){
+    if(!confirm("₹"+data.amount+" confirm? "+(data.ign||"")+" ke Deposit me jayega."))return;
+    if(deps.some(x=>x.id!==id&&x.utr===data.utr&&x.status!=="rejected")&&!confirm("UTR dusre deposit mein bhi hai. Phir bhi?"))return;
+    const uref=doc(db,"users",data.uid);
+    const res=await runTransaction(db,async t=>{
+     const ds2=await t.get(dref);
+     if(!ds2.exists()||ds2.data().status!=="pending")return "done";
+     const us=await t.get(uref);
+     if(!us.exists())return "nouser";
+     const cur=us.data().wallet||{};
+     const W={w:typeof cur.w==="number"?cur.w:0, d:typeof cur.d==="number"?cur.d:0, b:typeof cur.b==="number"?cur.b:0, tx:Array.isArray(cur.tx)?cur.tx.slice():[]};
+     const amt=Number(ds2.data().amount)||0;
+     W.d+=amt;
+     // Pending Add Cash request → Success
+     let marked=false;
+     for(const row of W.tx){
+      if(marked)break;
+      if(/pending/i.test(row.s||"")&&/add cash|deposit/i.test(row.t||"")&&(Math.abs(Number(row.a)||0)===0||Math.abs(Number(row.a)||0)===amt||String(row.t||"").includes(String(amt)))){
+       row.s="Success";row.t="Deposit confirmed ₹"+amt;row.a=amt;marked=true;
+      }
+     }
+     if(!marked)W.tx.unshift({t:"Deposit confirmed ₹"+amt,a:amt,s:"Success",at:Date.now()});
+     W.tx=W.tx.slice(0,40);
+     t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+     t.update(dref,{status:"approved",approvedAt:Date.now()});
+     return "ok";
+    });
+    if(res==="done")alert("Already process.");
+    if(res==="nouser")alert("User nahi mila.");
+   }else{
+    if(!confirm("Reject karna hai?"))return;
+    // Mark pending add-cash as Rejected in history
+    try{
+     const uref=doc(db,"users",data.uid);
+     await runTransaction(db,async t=>{
+      const ds2=await t.get(dref);
+      if(!ds2.exists()||ds2.data().status!=="pending")return;
+      const amt=Number(ds2.data().amount)||0;
+      const us=await t.get(uref);
+      if(us.exists()){
+       const cur=us.data().wallet||{};
+       const W={w:typeof cur.w==="number"?cur.w:0,d:typeof cur.d==="number"?cur.d:0,b:typeof cur.b==="number"?cur.b:0,tx:Array.isArray(cur.tx)?cur.tx.slice():[]};
+       for(const row of W.tx){
+        if(/pending/i.test(row.s||"")&&/add cash|deposit/i.test(row.t||"")&&(row.t.includes(String(amt))||Math.abs(Number(row.a)||0)===0)){
+         row.s="Rejected";row.t="Add Cash rejected ₹"+amt;break;
+        }
+       }
+       t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+      }
+      t.update(dref,{status:"rejected",rejectedAt:Date.now()});
+     });
+    }catch(_){await updateDoc(dref,{status:"rejected",rejectedAt:Date.now()})}
+   }
+  }
+  else if(d.copy){const m=matches.find(x=>x.id==d.copy),t=new Date(m.startTime).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),txt="⏰ "+m.title+" "+t+" par shuru hoga. App kholo aur slot check karo!";
+   try{await navigator.clipboard.writeText(txt);b.textContent="Copy ho gaya"}catch(e){prompt("Copy karo:",txt)}}
+  else if(d.delcat){if(confirm("Mode delete?"))await deleteDoc(doc(db,"categories",d.delcat))}
+  else if(d.delstaff){
+   if(!confirm("Is staff ko hataana hai? Staff panel login band ho jayega (Auth account alag se Firebase se delete karna padega)."))return;
+   await deleteDoc(doc(db,"staff",d.delstaff));
+   alert("Staff hata diya.");
+   if(tab==="cats")draw();
+  }
+  else if(d.deladmin){
+   if(d.deladmin===(auth.currentUser&&auth.currentUser.uid)){alert("Apna admin hata nahi sakte.");return}
+   if(!confirm("Is admin ko hatana hai? Login band ho jayega."))return;
+   await deleteDoc(doc(db,"admins",d.deladmin));
+   alert("Admin hata diya.");
+   if(tab==="cats")draw();
+  }
+  else if(d.flag){const[mid,uid,f]=d.flag.split(":"),on=!b.classList.contains("on"),m=matches.find(x=>x.id==mid),pr=doc(db,"matches",mid,"players",uid);
+   if(f=="paid"&&m.fee>0){
+    const ps=await getDoc(pr),taken=new Set((await getDocs(collection(db,"matches",mid,"slots"))).docs.map(x=>x.id)),bt=writeBatch(db);
+    if(on){
+     if(taken.size>=m.slots){alert("Slots full.");return}
+     let n=ps.data().want;if(!(n>=1&&n<=m.slots)||taken.has(String(n))){n=1;while(taken.has(String(n)))n++}
+     bt.set(doc(db,"matches",mid,"slots",String(n)),{uid});bt.update(pr,{paid:true,slot:n});
+    }else{
+     const cur=ps.data().slot;if(cur)bt.delete(doc(db,"matches",mid,"slots",String(cur)));
+     bt.update(pr,{paid:false,slot:null});
+    }
+    await bt.commit();
+    slotCount[mid]=(await getDocs(collection(db,"matches",mid,"slots"))).size;
+    plOpen=true;await fillPlayers(mid);
+   }else if(f=="prizePaid"){
+    let amt=0;
+    if(on){
+     // Sirf ek player ko prize
+     const allP=await getDocs(collection(db,"matches",mid,"players"));
+     const other=allP.docs.find(x=>x.id!==uid&&x.data().prizePaid);
+     if(other){alert("Prize pehle se "+(other.data().ign||"kisi aur")+" ko mil chuka hai. Sirf ek ko de sakte ho.");return}
+     const r=prompt("Prize ₹?",String(m.prizeInr||0));if(r===null)return;amt=Math.max(0,parseInt(r,10)||0);
+     if(amt>0){
+      const uref=doc(db,"users",uid);
+      await runTransaction(db,async t=>{
+       const us=await t.get(uref);
+       if(!us.exists())return;
+       const cur=us.data().wallet||{};
+       const W={w:typeof cur.w==="number"?cur.w:0,d:typeof cur.d==="number"?cur.d:0,b:typeof cur.b==="number"?cur.b:0,tx:Array.isArray(cur.tx)?cur.tx.slice():[]};
+       W.w+=amt;
+       W.tx.unshift({t:"Prize: "+(m.title||"Match"),a:amt,s:"Success",at:Date.now()});
+       W.tx=W.tx.slice(0,40);
+       t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+      });
+     }
+    }else{
+     // undo: prize hatao, wallet se kaat (agar pehle diya tha)
+     const prev=+(await getDoc(pr)).data()?.prizeAmt||0;
+     if(prev>0){
+      const uref=doc(db,"users",uid);
+      await runTransaction(db,async t=>{
+       const us=await t.get(uref);
+       if(!us.exists())return;
+       const cur=us.data().wallet||{};
+       const W={w:typeof cur.w==="number"?cur.w:0,d:typeof cur.d==="number"?cur.d:0,b:typeof cur.b==="number"?cur.b:0,tx:Array.isArray(cur.tx)?cur.tx.slice():[]};
+       W.w=Math.max(0,W.w-prev);
+       W.tx.unshift({t:"Prize undo: "+(m.title||"Match"),a:-prev,s:"Success",at:Date.now()});
+       W.tx=W.tx.slice(0,40);
+       t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+      });
+     }
+    }
+    await updateDoc(pr,{prizePaid:on,prizeAmt:amt});
+    if(on&&amt>0)alert("₹"+amt+" player ke Winning balance mein add ho gaya. Ab dusre ko prize nahi de sakte.");
+    plOpen=true;await fillPlayers(mid);
+   }else{await updateDoc(pr,{[f]:on});b.classList.toggle("on",on);b.classList.toggle("ghost",!on)}
+  }
+  else if(d.kick){
+   const[mid,uid]=d.kick.split(":"),m=matches.find(x=>x.id==mid);
+   const fee=Number(m?.fee)||0;
+   if(!confirm((m?.title||"Match")+" se player REMOVE karna hai?"+(fee?`\n\nFee ₹${fee} unke Deposit wallet mein refund ho jayegi.`:"")))return;
+   const pr=doc(db,"matches",mid,"players",uid);
+   const ps=await getDoc(pr);
+   if(!ps.exists()){alert("Player pehle se remove hai.");return}
+   const pdata=ps.data(),slot=pdata.slot;
+   const wasPaid=pdata.paid===true||pdata.paidVia==="wallet";
+   await runTransaction(db,async t=>{
+    if(wasPaid&&fee>0){
+     const uref=doc(db,"users",uid);
+     const us=await t.get(uref);
+     if(us.exists()){
+      const cur=us.data().wallet||{};
+      const W={w:typeof cur.w==="number"?cur.w:0,d:typeof cur.d==="number"?cur.d:0,b:typeof cur.b==="number"?cur.b:0,tx:Array.isArray(cur.tx)?cur.tx.slice():[]};
+      W.d+=fee;
+      W.tx.unshift({t:"Refund: "+(m.title||"Match")+" (remove)",a:fee,s:"Success",at:Date.now()});
+      W.tx=W.tx.slice(0,40);
+      t.update(uref,{wallet:W,coins:W.w+W.d+W.b});
+     }
+    }
+    t.delete(pr);
+    if(slot)t.delete(doc(db,"matches",mid,"slots",String(slot)));
+   });
+   try{slotCount[mid]=(await getDocs(collection(db,"matches",mid,"slots"))).size}catch(e){}
+   alert(wasPaid&&fee>0?`Player remove. ₹${fee} Deposit mein refund.`:"Player remove ho gaya.");
+   plOpen=true;await fillPlayers(mid);
+  }
+  else if(d.pl){
+   openId=d.pl;
+   plOpen=!plOpen;
+   draw();
+  }
+  else if(d.award){
+   if(!confirm("Result dedo? Match Done ho jayega."))return;
+   const ins=[...($("#pl"+d.award)?.querySelectorAll("input[data-u]")||[])].filter(i=>+i.value>0);
+   for(const i of ins)await updateDoc(doc(db,"users",i.dataset.u),{coins:increment(+i.value)});
+   await updateDoc(doc(db,"matches",d.award),{status:"done",awarded:true,doneAt:Date.now()});
+   await deleteDoc(doc(db,"matches",d.award,"secret","room")).catch(()=>{});
+   openId=null;mFilter="done";
+   alert("Result de diya · status Done.");
+  }
+ }catch(err){alert("Nahi hua: "+(err.code||err.message))}
+};
+</script>
+</body>
+</html>
